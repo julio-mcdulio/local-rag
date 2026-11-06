@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rag-cli"
+version = "0.1.0"
+description = "Local RAG CLI: ingest text files, precompute per-model indices, semantic + BM25 + grep search, MCP server"
+requires-python = ">=3.10"
+dependencies = [
+    "pyyaml>=6.0",
+    "numpy>=1.24",
+    "pypdf>=4.0",
+    "pypdfium2>=4.0",
+    "requests>=2.31",
+    "sentence-transformers>=3.0",
+    "torch>=2.1",
+    "pyjwt[crypto]>=2.8",
+    "starlette>=0.37",
+    "uvicorn>=0.29",
+    "mcp>=1.0",
+    "sqlite-vec>=0.1",
+]
+
+[project.scripts]
+rag = "rag.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.setuptools]
+packages = ["rag"]

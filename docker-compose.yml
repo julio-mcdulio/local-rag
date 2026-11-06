@@ -1,0 +1,48 @@
+# RAG CLI — single service (Ollama and the llama.cpp LLM are external local
+# services, deliberately NOT part of this stack).
+#
+# Networking: this container is placed on a shared *internal* Docker network
+# so it can reach ollama / llamacpp by container name and has NO egress to
+# the outside (internal networks have no NAT / default route).
+#
+# One-time setup (on the host):
+#   docker network create --internal services
+#   docker network connect services ollama
+#   docker network connect services llamacpp
+#
+# Usage:
+#   1. Create ~/.rag/config.yaml (e.g. via `rag install`) with:
+#        llm.url:  http://llamacpp:8080
+#        ocr.url:  http://ollama:11434
+#      plus ingestion dirs that exist on the host and (optional) JWT auth.
+#   2. docker compose up -d
+#
+# Runtime config changes (`rag dir add/remove`) do not need a restart:
+#   docker exec -it rag kill -HUP 1
+
+services:
+  rag:
+    build: .
+    container_name: rag
+    restart: unless-stopped
+    ports:
+      - "8931:8931"
+    networks:
+      - services
+    volumes:
+      # Config: ~/.rag/config.yaml -> /home/rag/.rag/config.yaml
+      - "${HOME}/.rag:/home/rag/.rag"
+      # Index data (SQLite DB + extracted artifacts)
+      - "rag-data:/home/rag/data"
+    environment:
+      RAG_CONFIG: /home/rag/.rag/config.yaml
+
+networks:
+  # Pre-existing network created on the host (see setup notes above);
+  # `external: true` means compose uses it as-is and never creates/removes it.
+  services:
+    external:
+      name: services
+
+volumes:
+  rag-data:
